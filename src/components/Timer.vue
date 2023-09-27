@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeMount, onDeactivated, ref } from "vue";
+import { randomScrambleForEvent } from "cubing/scramble";
 
 //add keyboard events
 function keyUpHandler(e: KeyboardEvent) {
@@ -22,7 +23,7 @@ function keyDownHandler(e: KeyboardEvent) {
   }
 }
 
-onBeforeMount(() => {
+onBeforeMount(async () => {
   window.addEventListener("keyup", keyUpHandler);
   window.addEventListener("keydown", keyDownHandler);
 });
@@ -39,6 +40,15 @@ const currentTime = ref(0);
 
 const isInspection = ref(false);
 const isRunning = ref(false);
+
+const currentScramble = ref("");
+const nextScramble = ref("");
+randomScrambleForEvent("333").then(
+  (res) => (currentScramble.value = res.toString())
+);
+randomScrambleForEvent("333").then(
+  (res) => (nextScramble.value = res.toString())
+);
 
 const currentSolveTime = computed(() => {
   if (isInspection.value)
@@ -77,11 +87,22 @@ function endSolve() {
   );
   isInspection.value = false;
   isRunning.value = false;
+  currentScramble.value = nextScramble.value;
+  randomScrambleForEvent("333").then(
+    (res) => (nextScramble.value = res.toString())
+  );
 }
 </script>
 
 <template>
   <v-container>
+    <v-row align="center" justify="center">
+      <v-col>
+        <span class="text-h4">
+          {{ currentScramble }}
+        </span>
+      </v-col>
+    </v-row>
     <v-row align="center" justify="center">
       <v-col>
         <span class="text-h1">
