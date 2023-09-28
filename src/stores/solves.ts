@@ -23,7 +23,7 @@ export const useSolveStore = defineStore("solveStore", {
       // you can directly mutate the state
       this.solves.push({ scramble, solvingTime, inspectionTime });
     },
-    removeSolve(id: Number) {
+    removeSolve(id: number) {
       this.solves.splice(id, 1);
     },
     reset() {
