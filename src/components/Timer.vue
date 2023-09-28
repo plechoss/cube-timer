@@ -127,6 +127,10 @@ function endSolve() {
     (res) => (nextScramble.value = res.toString())
   );
 }
+
+function onReset() {
+  store.reset()
+}
 </script>
 
 <template>
@@ -157,7 +161,16 @@ function endSolve() {
         </v-row>
       </v-col>
       <v-col cols="2">
-        {{ solvingTimesDisplay }}
+        <v-row>
+          <v-col>
+            {{ solvingTimesDisplay }}
+          </v-col>
+        </v-row>
+        <v-row>
+          <v-col>
+            <v-btn @click="onReset" variant="text">Reset</v-btn>
+          </v-col>
+        </v-row>
       </v-col>
     </v-row>
   </v-container>
