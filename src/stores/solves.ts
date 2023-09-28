@@ -9,7 +9,7 @@ export const useSolveStore = defineStore("solveStore", {
      * @returns {Solve}
      */
     lastSolve(state) {
-      return state.solves.at(-1);
+      return state.solves[state.solves.length - 1];
     },
     /**
      * @returns {Solve[]}

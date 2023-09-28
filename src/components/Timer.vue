@@ -3,10 +3,17 @@ import { computed, onBeforeMount, onDeactivated, ref } from "vue";
 import { randomScrambleForEvent } from "cubing/scramble";
 import { settings } from "../static/settings";
 import { useSolveStore } from "../stores/solves"
+import { avg } from "../helpers/timer"
 
 const store = useSolveStore()
 const solvingTimesDisplay = computed(() => {
   return store.solvingTimes.map((x: Number) => x.toFixed(2)).join(', ')
+})
+const stats = computed(() => {
+  return {
+    avg5: store.solvingTimes.length >= 4 ? avg(store.solvingTimes.slice(-5)).toFixed(2) : 'DNF',
+    avg12: store.solvingTimes.length >= 11 ? avg(store.solvingTimes.slice(-12)).toFixed(2) : 'DNF',
+  }
 })
 
 //add keyboard events
@@ -112,7 +119,10 @@ function endSolve() {
 <template>
   <v-container>
     <v-row align="center" justify="center">
-      <v-spacer />
+      <v-col cols="2">
+        {{ `current avg5: ${stats.avg5}` }}
+        {{ `current avg12: ${stats.avg12}` }}
+      </v-col>
       <v-col cols="8">
         <v-row align="center" justify="center">
           <v-col>
