@@ -3,16 +3,29 @@ import { computed, onBeforeMount, onDeactivated, ref } from "vue";
 import { randomScrambleForEvent } from "cubing/scramble";
 import { settings } from "../static/settings";
 import { useSolveStore } from "../stores/solves"
-import { avg } from "../helpers/timer"
+import { getBestSessionStats, getCurrentSessionStats } from "../helpers/timer"
 
 const store = useSolveStore()
 const solvingTimesDisplay = computed(() => {
   return store.solvingTimes.map((x: Number) => x.toFixed(2)).join(', ')
 })
-const stats = computed(() => {
+
+const currentStats = computed(() => {
+  return getCurrentSessionStats(store.solvingTimes)
+})
+
+const bestStats = computed(() => {
+  return getBestSessionStats(store.solvingTimes)
+})
+
+const statsDisplayed = computed(() => {
   return {
-    avg5: store.solvingTimes.length >= 4 ? avg(store.solvingTimes.slice(-5)).toFixed(2) : 'DNF',
-    avg12: store.solvingTimes.length >= 11 ? avg(store.solvingTimes.slice(-12)).toFixed(2) : 'DNF',
+    currentAvg5: currentStats.value.avg5 == Number.MAX_VALUE ? 'DNF' : currentStats.value.avg5.toFixed(2),
+    currentAvg12: currentStats.value.avg12 == Number.MAX_VALUE ? 'DNF' : currentStats.value.avg12.toFixed(2),
+    currentAvg100: currentStats.value.avg100 == Number.MAX_VALUE ? 'DNF' : currentStats.value.avg100.toFixed(2),
+    bestAvg5: bestStats.value.avg5 == Number.MAX_VALUE ? 'DNF' : bestStats.value.avg5.toFixed(2),
+    bestAvg12: bestStats.value.avg12 == Number.MAX_VALUE ? 'DNF' : bestStats.value.avg12.toFixed(2),
+    bestAvg100: bestStats.value.avg100 == Number.MAX_VALUE ? 'DNF' : bestStats.value.avg100.toFixed(2),
   }
 })
 
@@ -120,8 +133,12 @@ function endSolve() {
   <v-container>
     <v-row align="center" justify="center">
       <v-col cols="2">
-        {{ `current avg5: ${stats.avg5}` }}
-        {{ `current avg12: ${stats.avg12}` }}
+        <p> {{ `current avg5: ${statsDisplayed.currentAvg5}` }} </p>
+        <p> {{ `best avg5: ${statsDisplayed.bestAvg5}` }} </p>
+        <p> {{ `current avg12: ${statsDisplayed.currentAvg12}` }} </p>
+        <p> {{ `best avg12: ${statsDisplayed.bestAvg12}` }} </p>
+        <p> {{ `current avg100: ${statsDisplayed.currentAvg100}` }} </p>
+        <p> {{ `best avg100: ${statsDisplayed.bestAvg100}` }} </p>
       </v-col>
       <v-col cols="8">
         <v-row align="center" justify="center">
