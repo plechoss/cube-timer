@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import { computed, onBeforeMount, onDeactivated, ref } from "vue";
 import { randomScrambleForEvent } from "cubing/scramble";
+import { settings } from "../static/settings";
+import { useSolveStore } from "../stores/solves"
+
+const store = useSolveStore()
+const solvingTimesDisplay = computed(() => {
+  return store.solvingTimes.map((x: Number) => x.toFixed(2)).join(', ')
+})
 
 //add keyboard events
 function keyUpHandler(e: KeyboardEvent) {
@@ -10,7 +17,11 @@ function keyUpHandler(e: KeyboardEvent) {
     } else if (isSpaceDownAfterSolve.value) {
       isSpaceDownAfterSolve.value = false;
     } else if (!isInspection.value && !isRunning.value) {
-      runInspection();
+      if (settings.inspection) {
+        runInspection();
+      } else {
+        runSolve();
+      }
     }
   }
 }
@@ -34,6 +45,7 @@ onDeactivated(() => {
 
 const isSpaceDownAfterSolve = ref(false);
 const inspectionStartTime = ref(-1);
+const lastInspectionTime = ref(0)
 const solveStartTime = ref(-1);
 const lastSolveTime = ref(0);
 const currentTime = ref(0);
@@ -70,8 +82,10 @@ function runInspection() {
   }, 1000);
 }
 function runSolve() {
-  solveStartTime.value = Date.now();
-  currentTime.value = Date.now();
+  const timestamp = Date.now()
+  solveStartTime.value = timestamp;
+  currentTime.value = timestamp;
+  lastInspectionTime.value = (timestamp - inspectionStartTime.value) / 1000
 
   isInspection.value = false;
   isRunning.value = true;
@@ -85,6 +99,7 @@ function endSolve() {
   lastSolveTime.value = Number(
     ((Date.now() - solveStartTime.value) / 1000).toFixed(2)
   );
+  store.addSolve(currentScramble.value, lastSolveTime.value, lastInspectionTime.value)
   isInspection.value = false;
   isRunning.value = false;
   currentScramble.value = nextScramble.value;
@@ -97,17 +112,25 @@ function endSolve() {
 <template>
   <v-container>
     <v-row align="center" justify="center">
-      <v-col>
-        <span class="text-h4">
-          {{ currentScramble }}
-        </span>
+      <v-spacer />
+      <v-col cols="8">
+        <v-row align="center" justify="center">
+          <v-col>
+            <span class="text-h4">
+              {{ currentScramble }}
+            </span>
+          </v-col>
+        </v-row>
+        <v-row align="center" justify="center">
+          <v-col>
+            <span class="text-h1">
+              {{ currentSolveTime }}
+            </span>
+          </v-col>
+        </v-row>
       </v-col>
-    </v-row>
-    <v-row align="center" justify="center">
-      <v-col>
-        <span class="text-h1">
-          {{ currentSolveTime }}
-        </span>
+      <v-col cols="2">
+        {{ solvingTimesDisplay }}
       </v-col>
     </v-row>
   </v-container>
