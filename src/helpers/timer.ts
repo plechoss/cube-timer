@@ -1,7 +1,7 @@
 import * as _ from "lodash";
 
 export function avg(solvingTimes: number[], scope: number): number {
-  if (solvingTimes.length < scope - 1) return Number.MAX_VALUE;
+  if (solvingTimes.length < scope) return Number.MAX_VALUE;
   if (_.countBy(solvingTimes)[Number.MAX_VALUE] > 1) return Number.MAX_VALUE;
 
   const lastNTimes = solvingTimes.slice(-scope);
@@ -14,7 +14,6 @@ export function avg(solvingTimes: number[], scope: number): number {
     (_val, index) => !idxFilter.includes(index)
   );
 
-  console.log({lastNTimes, bestIdx, worstIdx, idxFilter, cleanSolvingTimes})
   return _.mean(cleanSolvingTimes);
 }
 
@@ -25,8 +24,7 @@ export function bestAvg(
   let bestAvgValue = Number.MAX_VALUE;
   let startingIndex = -1;
 
-
-  [...Array(Math.max(solvingTimes.length - scope, 0)).keys()].forEach((i) => {
+  [...Array(Math.max(solvingTimes.length - scope + 1, 0)).keys()].forEach((i) => {
     let currentAvg = avg(solvingTimes.slice(i, i + scope), scope);
     if (currentAvg < bestAvgValue) {
       bestAvgValue = currentAvg;
