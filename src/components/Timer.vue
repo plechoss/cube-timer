@@ -1,9 +1,14 @@
 <script setup lang="ts">
-import { computed, onBeforeMount, onDeactivated, ref } from "vue";
+import { computed, defineProps, onBeforeMount, onDeactivated, ref, watch } from "vue";
 import { randomScrambleForEvent } from "cubing/scramble";
 import { settings } from "../static/settings";
 import { useSolveStore } from "../stores/solves"
 import { getBestSessionStats, getCurrentSessionStats } from "../helpers/timer"
+import { ScrambleType } from "../types/enums"
+
+const props = defineProps<{
+  scrambleType: ScrambleType
+}>()
 
 const store = useSolveStore()
 const solvingTimesDisplay = computed(() => {
@@ -75,12 +80,7 @@ const isRunning = ref(false);
 
 const currentScramble = ref("");
 const nextScramble = ref("");
-randomScrambleForEvent("333").then(
-  (res) => (currentScramble.value = res.toString())
-);
-randomScrambleForEvent("333").then(
-  (res) => (nextScramble.value = res.toString())
-);
+refreshScrambles();
 
 const currentSolveTime = computed(() => {
   if (isInspection.value)
@@ -123,7 +123,7 @@ function endSolve() {
   isInspection.value = false;
   isRunning.value = false;
   currentScramble.value = nextScramble.value;
-  randomScrambleForEvent("333").then(
+  randomScrambleForEvent(props.scrambleType).then(
     (res) => (nextScramble.value = res.toString())
   );
 }
@@ -131,6 +131,19 @@ function endSolve() {
 function onReset() {
   store.reset()
 }
+function refreshScrambles() {
+  randomScrambleForEvent(props.scrambleType).then(
+    (res: any) => (currentScramble.value = res.toString())
+  );
+  randomScrambleForEvent(props.scrambleType).then(
+    (res: any) => (nextScramble.value = res.toString())
+  );
+}
+
+watch(() => props.scrambleType, (newVal: ScrambleType) => {
+  console.log(`scramble type changed to ${newVal}`)
+  refreshScrambles()
+})
 </script>
 
 <template>
