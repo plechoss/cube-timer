@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, defineProps, onBeforeMount, onDeactivated, ref, watch } from "vue";
+import { computed, onBeforeMount, onDeactivated, ref, watch } from "vue";
 import { randomScrambleForEvent } from "cubing/scramble";
 import { settings } from "../static/settings";
 import { useSolveStore } from "../stores/solves"
@@ -56,6 +56,8 @@ function keyDownHandler(e: KeyboardEvent) {
       endSolve();
       isSpaceDownAfterSolve.value = true;
     }
+  } else if (isRunning.value) {
+    endSolve();
   }
 }
 
@@ -88,9 +90,19 @@ const currentSolveTime = computed(() => {
       15 + (inspectionStartTime.value - currentTime.value) / 1000
     );
   else if (isRunning.value)
-    return ((currentTime.value - solveStartTime.value) / 1000).toFixed(2);
-  else return lastSolveTime.value.toFixed(2);
+    return ((currentTime.value - solveStartTime.value) / 1000);
+  else return lastSolveTime.value;
 });
+const currentSolveTimeDisplay = computed(() => {
+  if (isInspection.value && currentSolveTime.value >= 1) return currentSolveTime.value.toFixed(0)
+  else if (isInspection.value && currentSolveTime.value < 1 && currentSolveTime.value >= -1) return '+2'
+  else if (isInspection.value && currentSolveTime.value < -1) return 'DNF'
+  return currentSolveTime.value.toFixed(2)
+})
+const currentSolveTimeDisplayClass = computed(() => {
+  if (isInspection.value && currentSolveTime.value < 1) return 'text-red'
+  else return '';
+})
 
 function runInspection() {
   inspectionStartTime.value = Date.now();
@@ -140,8 +152,7 @@ function refreshScrambles() {
   );
 }
 
-watch(() => props.scrambleType, (newVal: ScrambleType) => {
-  console.log(`scramble type changed to ${newVal}`)
+watch(() => props.scrambleType, () => {
   refreshScrambles()
 })
 </script>
@@ -167,8 +178,8 @@ watch(() => props.scrambleType, (newVal: ScrambleType) => {
         </v-row>
         <v-row align="center" justify="center">
           <v-col>
-            <span class="text-h1">
-              {{ currentSolveTime }}
+            <span :class="'text-h1 ' + currentSolveTimeDisplayClass">
+              {{ currentSolveTimeDisplay }}
             </span>
           </v-col>
         </v-row>
