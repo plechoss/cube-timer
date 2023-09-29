@@ -10,9 +10,15 @@ const props = defineProps<{
   scrambleType: ScrambleType
 }>()
 
+function solveToString(solve: Solve) {
+  if (solve.inspectionTime <= 15) return solve.solvingTime.toFixed(2)
+  else if (solve.inspectionTime > 15 && solve.inspectionTime <= 17) return `${(solve.solvingTime + 2).toFixed(2)}+`
+  else return `DNF(${solve.solvingTime.toFixed(2)})`
+}
+
 const store = useSolveStore()
 const solvingTimesDisplay = computed(() => {
-  return store.solvingTimes.map((x: Number) => x.toFixed(2)).join(', ')
+  return store.solves.map((x: Solve) => solveToString(x)).join(', ')
 })
 
 const currentStats = computed(() => {
