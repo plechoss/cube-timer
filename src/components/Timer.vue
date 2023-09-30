@@ -5,6 +5,7 @@ import { settings } from "../static/settings";
 import { useSolveStore } from "../stores/solves"
 import { getBestSessionStats, getCurrentSessionStats } from "../helpers/timer"
 import { ScrambleType } from "../types/enums"
+import moment from 'moment';
 
 const props = defineProps<{
   scrambleType: ScrambleType
@@ -99,11 +100,22 @@ const currentSolveTime = computed(() => {
     return ((currentTime.value - solveStartTime.value) / 1000);
   else return lastSolveTime.value;
 });
+
+function timeInSecondsToDisplay(time: number): string {
+  let format;
+
+  if (time < 10) format = 's.SS'
+  else if (time < 60) format = 'ss.SS'
+  else if (time < 3600) format = 'mm:ss.SS'
+  else format = 'HH:mm:ss.SS'
+
+  return moment.utc(time * 1000).format(format)
+}
 const currentSolveTimeDisplay = computed(() => {
   if (isInspection.value && currentSolveTime.value >= 1) return currentSolveTime.value.toFixed(0)
   else if (isInspection.value && currentSolveTime.value < 1 && currentSolveTime.value >= -1) return '+2'
   else if (isInspection.value && currentSolveTime.value < -1) return 'DNF'
-  return currentSolveTime.value.toFixed(2)
+  return timeInSecondsToDisplay(currentSolveTime.value)
 })
 const currentSolveTimeDisplayClass = computed(() => {
   if (isInspection.value && currentSolveTime.value < 1) return 'text-red'

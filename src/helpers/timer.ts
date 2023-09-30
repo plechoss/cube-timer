@@ -1,5 +1,5 @@
 import * as _ from "lodash";
-
+//TODO change avg functions to take solves array and calculate DNFs and +2
 export function avg(solvingTimes: number[], scope: number): number {
   if (solvingTimes.length < scope) return Number.MAX_VALUE;
   if (_.countBy(solvingTimes)[Number.MAX_VALUE] > 1) return Number.MAX_VALUE;
