@@ -1,10 +1,11 @@
 import * as _ from "lodash";
 //TODO change avg functions to take solves array and calculate DNFs and +2
-export function avg(solvingTimes: number[], scope: number): number {
+export function avg(solves: Solve[], scope: number): number {
+  const solvingTimes = solvesToNumValues(solves);
   if (solvingTimes.length < scope) return Number.MAX_VALUE;
-  if (_.countBy(solvingTimes)[Number.MAX_VALUE] > 1) return Number.MAX_VALUE;
 
   const lastNTimes = solvingTimes.slice(-scope);
+  if (_.countBy(lastNTimes)[Number.MAX_VALUE] > 1) return Number.MAX_VALUE;
 
   const bestIdx = lastNTimes.indexOf(Math.min(...lastNTimes));
   const worstIdx = lastNTimes.indexOf(Math.max(...lastNTimes));
@@ -18,14 +19,14 @@ export function avg(solvingTimes: number[], scope: number): number {
 }
 
 export function bestAvg(
-  solvingTimes: number[],
+  solves: Solve[],
   scope: number
 ): { bestAvgValue: number; startingIndex: number } {
   let bestAvgValue = Number.MAX_VALUE;
   let startingIndex = -1;
 
-  [...Array(Math.max(solvingTimes.length - scope + 1, 0)).keys()].forEach((i) => {
-    let currentAvg = avg(solvingTimes.slice(i, i + scope), scope);
+  [...Array(Math.max(solves.length - scope + 1, 0)).keys()].forEach((i) => {
+    let currentAvg = avg(solves.slice(i, i + scope), scope);
     if (currentAvg < bestAvgValue) {
       bestAvgValue = currentAvg;
       startingIndex = i;
@@ -35,12 +36,31 @@ export function bestAvg(
   return { bestAvgValue, startingIndex };
 }
 
-export function getBestSessionStats(solvingTimes: number[]): BestSessionStats {
-  const avg5Stats = bestAvg(solvingTimes, 5);
-  const avg12Stats = bestAvg(solvingTimes, 12);
-  const avg100Stats = bestAvg(solvingTimes, 100);
+function solvesToNumValues(solves: Solve[]): number[] {
+  return solves.map((solve: Solve) => {
+    if (solve.isDNF) return Number.MAX_VALUE;
+    else if (solve.isPlusTwo) return solve.solvingTime + 2;
+    else return solve.solvingTime;
+  });
+}
 
+export function getBestSessionStats(solves: Solve[]): BestSessionStats {
+  const solvingTimes = solvesToNumValues(solves);
+  const best = Math.min(...solvingTimes);
+  const resultsWithoutDNFs = solvingTimes.filter((x) => x != Number.MAX_VALUE);
+  const worst =
+    resultsWithoutDNFs.length > 0
+      ? Math.max(...resultsWithoutDNFs)
+      : Number.MAX_VALUE;
+
+  const avg5Stats = bestAvg(solves, 5);
+  const avg12Stats = bestAvg(solves, 12);
+  const avg100Stats = bestAvg(solves, 100);
+
+  console.log({ worst });
   return {
+    best: best,
+    worst: worst,
     avg5: avg5Stats.bestAvgValue,
     avg5Start: avg5Stats.startingIndex,
     avg12: avg12Stats.bestAvgValue,
@@ -50,12 +70,10 @@ export function getBestSessionStats(solvingTimes: number[]): BestSessionStats {
   };
 }
 
-export function getCurrentSessionStats(
-  solvingTimes: number[]
-): CurrentSessionStats {
-  const avg5 = avg(solvingTimes, 5);
-  const avg12 = avg(solvingTimes, 12);
-  const avg100 = avg(solvingTimes, 100);
+export function getCurrentSessionStats(solves: Solve[]): CurrentSessionStats {
+  const avg5 = avg(solves, 5);
+  const avg12 = avg(solves, 12);
+  const avg100 = avg(solves, 100);
 
   return {
     avg5,

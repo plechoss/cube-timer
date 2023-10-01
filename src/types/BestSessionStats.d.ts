@@ -1,4 +1,6 @@
 type BestSessionStats = {
+  best: number;
+  worst: number;
   avg5: number;
   avg5Start: number;
   avg12: number;

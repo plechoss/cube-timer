@@ -2,5 +2,6 @@ type Solve = {
   scramble: string;
   solvingTime: number;
   inspectionTime: number;
-  isDNF?: boolean
+  isDNF: boolean;
+  isPlusTwo: boolean;
 };

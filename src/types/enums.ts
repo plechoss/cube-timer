@@ -9,5 +9,6 @@ export type ScrambleType =
   | "777"
   | "sq1"
   | "minx"
+  | "pyram"
   | "clock"
   | "skewb";

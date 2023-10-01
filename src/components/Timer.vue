@@ -1,10 +1,12 @@
 <script setup lang="ts">
+import type { Ref } from 'vue';
 import { computed, onBeforeMount, onDeactivated, ref, watch } from "vue";
 import { randomScrambleForEvent } from "cubing/scramble";
 import { settings } from "../static/settings";
 import { useSolveStore } from "../stores/solves"
 import { getBestSessionStats, getCurrentSessionStats } from "../helpers/timer"
 import { ScrambleType } from "../types/enums"
+import { useCurrentColors } from '../composables/currentColors'
 import moment from 'moment';
 
 const props = defineProps<{
@@ -12,9 +14,9 @@ const props = defineProps<{
 }>()
 
 function solveToString(solve: Solve) {
-  if (solve.inspectionTime <= 15) return solve.solvingTime.toFixed(2)
-  else if (solve.inspectionTime > 15 && solve.inspectionTime <= 17) return `${(solve.solvingTime + 2).toFixed(2)}+`
-  else return `DNF(${solve.solvingTime.toFixed(2)})`
+  if (solve.isDNF) return `DNF(${solve.solvingTime.toFixed(2)})`
+  else if (solve.isPlusTwo) return `${(solve.solvingTime + 2).toFixed(2)}+`
+  else return solve.solvingTime.toFixed(2)
 }
 
 const store = useSolveStore()
@@ -23,21 +25,26 @@ const solvingTimesDisplay = computed(() => {
 })
 
 const currentStats = computed(() => {
-  return getCurrentSessionStats(store.solvingTimes)
+  return getCurrentSessionStats(store.solves)
 })
 
 const bestStats = computed(() => {
-  return getBestSessionStats(store.solvingTimes)
+  return getBestSessionStats(store.solves)
 })
 
+function displayTime(solvingTime: number): string {
+  return solvingTime == Number.MAX_VALUE ? "DNF" : solvingTime.toFixed(2)
+}
 const statsDisplayed = computed(() => {
   return {
-    currentAvg5: currentStats.value.avg5 == Number.MAX_VALUE ? 'DNF' : currentStats.value.avg5.toFixed(2),
-    currentAvg12: currentStats.value.avg12 == Number.MAX_VALUE ? 'DNF' : currentStats.value.avg12.toFixed(2),
-    currentAvg100: currentStats.value.avg100 == Number.MAX_VALUE ? 'DNF' : currentStats.value.avg100.toFixed(2),
-    bestAvg5: bestStats.value.avg5 == Number.MAX_VALUE ? 'DNF' : bestStats.value.avg5.toFixed(2),
-    bestAvg12: bestStats.value.avg12 == Number.MAX_VALUE ? 'DNF' : bestStats.value.avg12.toFixed(2),
-    bestAvg100: bestStats.value.avg100 == Number.MAX_VALUE ? 'DNF' : bestStats.value.avg100.toFixed(2),
+    best: displayTime(bestStats.value.best),
+    worst: displayTime(bestStats.value.worst),
+    currentAvg5: displayTime(currentStats.value.avg5),
+    currentAvg12: displayTime(currentStats.value.avg12),
+    currentAvg100: displayTime(currentStats.value.avg100),
+    bestAvg5: displayTime(bestStats.value.avg5),
+    bestAvg12: displayTime(bestStats.value.avg12),
+    bestAvg100: displayTime(bestStats.value.avg100),
   }
 })
 
@@ -45,13 +52,16 @@ const statsDisplayed = computed(() => {
 function keyUpHandler(e: KeyboardEvent) {
   if (e.code === "Space") {
     if (isInspection.value) {
+      currentPenalty.value = 'noPenalty'
       runSolve();
     } else if (isSpaceDownAfterSolve.value) {
       isSpaceDownAfterSolve.value = false;
     } else if (!isInspection.value && !isRunning.value) {
       if (settings.inspection) {
+        currentPenalty.value = 'noPenalty'
         runInspection();
       } else {
+        currentPenalty.value = 'noPenalty'
         runSolve();
       }
     }
@@ -88,8 +98,8 @@ const isInspection = ref(false);
 const isRunning = ref(false);
 
 const currentScramble = ref("");
-const nextScramble = ref("");
-refreshScrambles();
+const currentPenalty: Ref<'noPenalty' | 'plusTwo' | 'DNF'> = ref('noPenalty')
+refreshScramble();
 
 const currentSolveTime = computed(() => {
   if (isInspection.value)
@@ -152,68 +162,85 @@ function endSolve() {
   store.addSolve(currentScramble.value, lastSolveTime.value, lastInspectionTime.value)
   isInspection.value = false;
   isRunning.value = false;
-  currentScramble.value = nextScramble.value;
-  randomScrambleForEvent(props.scrambleType).then(
-    (res) => (nextScramble.value = res.toString())
-  );
+  refreshScramble()
 }
 
 function onReset() {
   store.reset()
 }
-function refreshScrambles() {
+function refreshScramble() {
   randomScrambleForEvent(props.scrambleType).then(
     (res: any) => (currentScramble.value = res.toString())
-  );
-  randomScrambleForEvent(props.scrambleType).then(
-    (res: any) => (nextScramble.value = res.toString())
   );
 }
 
 watch(() => props.scrambleType, () => {
-  refreshScrambles()
+  refreshScramble()
+})
+
+
+const currentColors = useCurrentColors()
+const buttonTextColor = computed(() => {
+  return currentColors.isDark.value ? 'text-white' : 'text-black'
 })
 </script>
 
 <template>
-  <v-container>
-    <v-row align="center" justify="center">
-      <v-col cols="2">
-        <p> {{ `current avg5: ${statsDisplayed.currentAvg5}` }} </p>
-        <p> {{ `best avg5: ${statsDisplayed.bestAvg5}` }} </p>
-        <p> {{ `current avg12: ${statsDisplayed.currentAvg12}` }} </p>
-        <p> {{ `best avg12: ${statsDisplayed.bestAvg12}` }} </p>
-        <p> {{ `current avg100: ${statsDisplayed.currentAvg100}` }} </p>
-        <p> {{ `best avg100: ${statsDisplayed.bestAvg100}` }} </p>
-      </v-col>
-      <v-col cols="8">
-        <v-row align="center" justify="center">
-          <v-col>
-            <span class="text-h4">
-              {{ currentScramble }}
-            </span>
-          </v-col>
-        </v-row>
-        <v-row align="center" justify="center">
-          <v-col>
-            <span :class="'text-h1 ' + currentSolveTimeDisplayClass">
-              {{ currentSolveTimeDisplay }}
-            </span>
-          </v-col>
-        </v-row>
-      </v-col>
-      <v-col cols="2">
-        <v-row>
-          <v-col>
-            {{ solvingTimesDisplay }}
-          </v-col>
-        </v-row>
-        <v-row>
-          <v-col>
-            <v-btn @click="onReset" variant="text">Reset</v-btn>
-          </v-col>
-        </v-row>
-      </v-col>
-    </v-row>
-  </v-container>
+  <v-row align-self="center" align="center" justify="center" fill-height>
+    <v-col cols="2">
+      <p v-if="store.solves.length >= 1"> {{ `best: ${statsDisplayed.best}` }} </p>
+      <p v-if="store.solves.length >= 1"> {{ `worst: ${statsDisplayed.worst}` }} </p>
+      <p v-if="store.solves.length >= 5"> {{ `current avg5: ${statsDisplayed.currentAvg5}` }} </p>
+      <p v-if="store.solves.length >= 5"> {{ `best avg5: ${statsDisplayed.bestAvg5}` }} </p>
+      <p v-if="store.solves.length >= 12"> {{ `current avg12: ${statsDisplayed.currentAvg12}` }} </p>
+      <p v-if="store.solves.length >= 12"> {{ `best avg12: ${statsDisplayed.bestAvg12}` }} </p>
+      <p v-if="store.solves.length >= 100"> {{ `current avg100: ${statsDisplayed.currentAvg100}` }} </p>
+      <p v-if="store.solves.length >= 100"> {{ `best avg100: ${statsDisplayed.bestAvg100}` }} </p>
+    </v-col>
+    <v-col cols="8">
+      <v-row align="center" justify="center">
+        <v-col>
+          <span class="text-h4">
+            {{ currentScramble }}
+          </span>
+        </v-col>
+      </v-row>
+      <v-row align="center" justify="center">
+        <v-col>
+          <span :class="'text-h1 ' + currentSolveTimeDisplayClass">
+            {{ currentSolveTimeDisplay }}
+          </span>
+        </v-col>
+      </v-row>
+      <v-row v-if="store.solves.length > 0">
+        <v-col>
+          <v-btn-toggle v-model="currentPenalty" rounded="0" mandatory group variant="text">
+            <v-btn value="noPenalty" @click="store.setLastSolveNoPenalty" plain :class="buttonTextColor">
+              no penalty
+            </v-btn>
+
+            <v-btn value="plusTwo" @click="store.setLastSolvePlusTwo" plain :class="buttonTextColor">
+              +2
+            </v-btn>
+
+            <v-btn value="DNF" @click="store.setLastSolveDNF" plain :class="buttonTextColor">
+              DNF
+            </v-btn>
+          </v-btn-toggle>
+        </v-col>
+      </v-row>
+    </v-col>
+    <v-col cols="2">
+      <v-row>
+        <v-col>
+          {{ solvingTimesDisplay }}
+        </v-col>
+      </v-row>
+      <v-row v-if="store.solves.length > 0">
+        <v-col>
+          <v-btn @click="onReset" variant="text">Reset</v-btn>
+        </v-col>
+      </v-row>
+    </v-col>
+  </v-row>
 </template>
