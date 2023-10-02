@@ -22,7 +22,13 @@ export const useSolveStore = defineStore("solveStore", {
     addSolve(scramble: string, solvingTime: number, inspectionTime: number) {
       const isDNF = inspectionTime > 17;
       const isPlusTwo = inspectionTime > 15 && inspectionTime <= 17;
-      this.solves.push({ scramble, solvingTime, inspectionTime, isDNF, isPlusTwo });
+      this.solves.push({
+        scramble,
+        solvingTime,
+        inspectionTime,
+        isDNF,
+        isPlusTwo,
+      });
     },
     removeSolve(id: number) {
       this.solves.splice(id, 1);
@@ -32,7 +38,7 @@ export const useSolveStore = defineStore("solveStore", {
     },
     setLastSolveDNF() {
       const newLastSolve = { ...this.lastSolve, isDNF: true, isPlusTwo: false };
-      this.solves.splice(-1, 1, newLastSolve)
+      this.solves.splice(-1, 1, newLastSolve);
     },
     setLastSolveNoPenalty() {
       const newLastSolve = {
@@ -40,11 +46,11 @@ export const useSolveStore = defineStore("solveStore", {
         isPlusTwo: false,
         isDNF: false,
       };
-      this.solves.splice(-1, 1, newLastSolve)
+      this.solves.splice(-1, 1, newLastSolve);
     },
     setLastSolvePlusTwo() {
       const newLastSolve = { ...this.lastSolve, isPlusTwo: true, isDNF: false };
-      this.solves.splice(-1, 1, newLastSolve)
+      this.solves.splice(-1, 1, newLastSolve);
     },
   },
 });

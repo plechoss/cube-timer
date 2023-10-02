@@ -183,6 +183,15 @@ const currentColors = useCurrentColors()
 const buttonTextColor = computed(() => {
   return currentColors.isDark.value ? 'text-white' : 'text-black'
 })
+
+function onPenaltyClick(e: Event, penaltyType: 'noPenalty' | 'plusTwo' | 'DNF') {
+  if (e.target.nodeName == "SPAN") e.target.parentNode.blur()
+  else e.target.blur()
+
+  if (penaltyType == 'noPenalty') store.setLastSolveNoPenalty()
+  else if (penaltyType == 'plusTwo') store.setLastSolvePlusTwo()
+  else store.setLastSolveDNF()
+}
 </script>
 
 <template>
@@ -215,15 +224,15 @@ const buttonTextColor = computed(() => {
       <v-row v-if="store.solves.length > 0">
         <v-col>
           <v-btn-toggle v-model="currentPenalty" rounded="0" mandatory group variant="text">
-            <v-btn value="noPenalty" @click="store.setLastSolveNoPenalty" plain :class="buttonTextColor">
+            <v-btn value="noPenalty" @click="onPenaltyClick($event, 'noPenalty')" plain :class="buttonTextColor">
               no penalty
             </v-btn>
 
-            <v-btn value="plusTwo" @click="store.setLastSolvePlusTwo" plain :class="buttonTextColor">
+            <v-btn value="plusTwo" @click="onPenaltyClick($event, 'plusTwo')" plain :class="buttonTextColor">
               +2
             </v-btn>
 
-            <v-btn value="DNF" @click="store.setLastSolveDNF" plain :class="buttonTextColor">
+            <v-btn value="DNF" @click="onPenaltyClick($event, 'DNF')" plain :class="buttonTextColor">
               DNF
             </v-btn>
           </v-btn-toggle>
