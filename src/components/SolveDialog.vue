@@ -56,7 +56,7 @@ const headers = ref([
   { title: '', key: 'displayIndex', sortable: false },
   { title: 'time', key: 'displayTime', sortable: false },
   { title: 'scramble', key: 'scramble', sortable: false },
-  { title: '', key: 'actions', sortable: false }
+  { title: '', key: 'actions', sortable: false, width: '56px' }
 ])
 
 const dialogTitle = computed(() => {
@@ -80,7 +80,7 @@ function openSnackbar(text: string) {
 function reconstruct(solve: Solve) {
   let inputUrl = new URL("https://reconstructions.jonatanklosko.com/edit")
   let inputParams = new URLSearchParams(inputUrl.search);
-  
+
   inputParams.set('title', '')
   inputParams.set('time', solve.solvingTime.toString())
   inputParams.set('method', 'cfop')
@@ -109,7 +109,12 @@ function reconstruct(solve: Solve) {
               <a @click="copyScrambleToClipboard(item.scramble)"> {{ item.scramble }}</a>
             </template>
             <template #item.actions="{ item }">
-              <v-icon @click="reconstruct(item)">mdi-cube-unfolded</v-icon>
+              <v-tooltip text="Go to reconstruction" :theme="currentColors.isDark.value ? 'light' : 'dark'"
+                location="top">
+                <template v-slot:activator="{ props }">
+                  <v-icon v-bind="props" class="show-on-hover" @click="reconstruct(item)">mdi-cube-unfolded</v-icon>
+                </template>
+              </v-tooltip>
             </template>
             <template #bottom></template>
           </v-data-table>
@@ -133,3 +138,13 @@ function reconstruct(solve: Solve) {
     </template>
   </v-snackbar>
 </template>
+
+<style scoped>
+tr:hover>td>.v-icon.show-on-hover {
+  display: inline-flex;
+}
+
+tr:not(:hover)>td>.v-icon.show-on-hover {
+  display: none !important;
+}
+</style>
