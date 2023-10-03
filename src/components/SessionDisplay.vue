@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, nextTick, ref, watch } from 'vue'
 import { useSolveStore } from "../stores/solves"
 import { useCurrentColors } from '../composables/currentColors';
 import { avg, solveToString } from "../helpers/timer"
@@ -48,14 +48,24 @@ function openSolveDialog(dialogType: DialogDisplayType, index: number) {
   isSolveDialogOpen.value = true
 }
 
+function scrollToBottom(id: string) {
+  nextTick(() => {
+    document.querySelector(`#${id} .v-table__wrapper table tbody tr:last-child`).scrollIntoView()
+  })
+}
+
+watch(solveStore.solves, () => {
+  scrollToBottom('solves-table')
+})
+
 </script>
 
 <template>
   <v-row class="parent-row">
     <v-col>
-      <v-data-table :items="solvesData" :headers="headers" item-value="time" :fixed-header="true" :fixed-footer="false"
-        :hover="true" :items-per-page="-1" :sticky="true" :theme="currentColors.isDark.value ? 'dark' : 'light'"
-        density="compact">
+      <v-data-table id="solves-table" :items="solvesData" :headers="headers" item-value="time" :fixed-header="true"
+        :fixed-footer="false" :hover="true" :items-per-page="-1" :sticky="true"
+        :theme="currentColors.isDark.value ? 'dark' : 'light'" density="compact">
 
         <template #item.displayTime="{ value, index }">
           <a @click="openSolveDialog('single', index)">
