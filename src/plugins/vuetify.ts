@@ -1,5 +1,6 @@
 import { createApp } from "vue";
 import { createVuetify, ThemeDefinition } from "vuetify";
+import { VDataTable } from "vuetify/labs/VDataTable";
 
 import "vuetify/styles";
 import * as components from "vuetify/components";
@@ -55,7 +56,10 @@ const myCustomDarkTheme: CustomThemeDefinition = {
 };
 
 export default createVuetify({
-  components,
+  components: {
+    ...components,
+    VDataTable,
+  },
   directives,
   theme: {
     defaultTheme: "myCustomLightTheme",

@@ -53,4 +53,5 @@ export const useSolveStore = defineStore("solveStore", {
       this.solves.splice(-1, 1, newLastSolve);
     },
   },
+  persist: true,
 });

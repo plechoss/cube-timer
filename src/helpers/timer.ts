@@ -1,4 +1,6 @@
 import * as _ from "lodash";
+import moment from "moment";
+
 //TODO change avg functions to take solves array and calculate DNFs and +2
 export function avg(solves: Solve[], scope: number): number {
   const solvingTimes = solvesToNumValues(solves);
@@ -57,7 +59,6 @@ export function getBestSessionStats(solves: Solve[]): BestSessionStats {
   const avg12Stats = bestAvg(solves, 12);
   const avg100Stats = bestAvg(solves, 100);
 
-  console.log({ worst });
   return {
     best: best,
     worst: worst,
@@ -80,4 +81,24 @@ export function getCurrentSessionStats(solves: Solve[]): CurrentSessionStats {
     avg12,
     avg100,
   };
+}
+
+export function timeInSecondsToDisplay(time: number): string {
+  let format;
+
+  if (time < 10) format = "s.SS";
+  else if (time < 60) format = "ss.SS";
+  else if (time < 10 * 60) format = "m:ss.SS";
+  else if (time < 3600) format = "mm:ss.SS";
+  else if (time < 10 * 3600) format = "H:mm:ss.SS";
+  else format = "HH:mm:ss.SS";
+
+  return moment.utc(time * 1000).format(format);
+}
+
+export function solveToString(solve: Solve) {
+  if (solve.isDNF) return `DNF(${timeInSecondsToDisplay(solve.solvingTime)})`;
+  else if (solve.isPlusTwo)
+    return `${timeInSecondsToDisplay(solve.solvingTime + 2)}+`;
+  else return timeInSecondsToDisplay(solve.solvingTime);
 }

@@ -2,6 +2,7 @@
 import { ref, Ref, watch, onMounted } from 'vue'
 import { ScrambleType } from './types/enums';
 import Timer from "./components/Timer.vue";
+import ScrambleDisplay from './components/ScrambleDisplay.vue';
 import { useCurrentColors } from './composables/currentColors'
 
 
@@ -40,22 +41,29 @@ watch(isDarkTheme, () => {
 onMounted(() => {
   setTheme()
 })
+
+const navDrawer = ref(false)
 </script>
 
 <template>
   <v-app>
-    <v-app-bar :color="currentColors.theme.global.current.value.colors['app-bar']">
-      <v-spacer></v-spacer>
-      <v-select v-model="scrambleType" :items="scrambleTypes" item-title="name" item-value="scrambleType" hide-details>
-      </v-select>
-      <v-spacer></v-spacer>
-      <v-switch v-model="isDarkTheme" hide-details></v-switch>
-    </v-app-bar>
-    <v-main>
-      <v-container fluid class="align-center fill-height">
+    <v-main class="h-100">
+      <v-container class="fill-height">
+        <ScrambleDisplay></ScrambleDisplay>
+        <v-icon @click="navDrawer = !navDrawer" icon="mdi-menu"></v-icon>
         <Timer :scramble-type="scrambleType" />
       </v-container>
     </v-main>
+    <v-navigation-drawer v-model="navDrawer" location="right" :disable-resize-watcher="true"
+      :color="currentColors.theme.global.current.value.colors['app-bar']" :temporary="true">
+      <v-list-item title="Scramble type">
+        <v-select v-model="scrambleType" :items="scrambleTypes" item-title="name" item-value="scrambleType" hide-details>
+        </v-select>
+      </v-list-item>
+      <v-list-item title="Dark theme">
+        <v-switch v-model="isDarkTheme" hide-details></v-switch>
+      </v-list-item>
+    </v-navigation-drawer>
   </v-app>
 </template>
 
@@ -64,5 +72,6 @@ onMounted(() => {
   margin-bottom: 0;
   padding-bottom: 0;
   padding-top: 0;
+  width: 100% !important;
 }
 </style>

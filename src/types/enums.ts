@@ -12,3 +12,5 @@ export type ScrambleType =
   | "pyram"
   | "clock"
   | "skewb";
+
+export type DialogDisplayType = "single" | "avg5" | "avg12";
