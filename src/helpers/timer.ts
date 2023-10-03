@@ -38,7 +38,7 @@ export function bestAvg(
   return { bestAvgValue, startingIndex };
 }
 
-function solvesToNumValues(solves: Solve[]): number[] {
+export function solvesToNumValues(solves: Solve[]): number[] {
   return solves.map((solve: Solve) => {
     if (solve.isDNF) return Number.MAX_VALUE;
     else if (solve.isPlusTwo) return solve.solvingTime + 2;
@@ -46,14 +46,21 @@ function solvesToNumValues(solves: Solve[]): number[] {
   });
 }
 
+export function bestSolve(solvingTimes: number[]): number {
+  return Math.min(...solvingTimes);
+}
+
+export function worstSolve(solvingTimes: number[]): number {
+  const resultsWithoutDNFs = solvingTimes.filter((x) => x != Number.MAX_VALUE);
+  return resultsWithoutDNFs.length > 0
+    ? Math.max(...resultsWithoutDNFs)
+    : Number.MAX_VALUE;
+}
+
 export function getBestSessionStats(solves: Solve[]): BestSessionStats {
   const solvingTimes = solvesToNumValues(solves);
-  const best = Math.min(...solvingTimes);
-  const resultsWithoutDNFs = solvingTimes.filter((x) => x != Number.MAX_VALUE);
-  const worst =
-    resultsWithoutDNFs.length > 0
-      ? Math.max(...resultsWithoutDNFs)
-      : Number.MAX_VALUE;
+  const best = bestSolve(solvingTimes);
+  const worst = worstSolve(solvingTimes);
 
   const avg5Stats = bestAvg(solves, 5);
   const avg12Stats = bestAvg(solves, 12);
