@@ -4,7 +4,8 @@ import { DialogDisplayType } from '../types/enums';
 import { avg, bestSolve, solveToString, solvesToNumValues, timeInSecondsToDisplay, worstSolve } from "../helpers/timer"
 import { useSolveStore } from '../stores/solves';
 import { useCurrentColors } from '../composables/currentColors';
-import { findIndex } from 'lodash';
+
+const emit = defineEmits(['close-dialog'])
 
 const solveStore = useSolveStore()
 const currentColors = useCurrentColors()
@@ -12,7 +13,6 @@ const currentColors = useCurrentColors()
 const props = defineProps<{
   dialogDisplayType: DialogDisplayType,
   endingIndex: number,
-  isOpen: boolean
 }>()
 
 const numSolves = computed(() => {
@@ -32,14 +32,8 @@ const displayAvg = computed(() => {
     : timeInSecondsToDisplay(numAvg);
 })
 const solvingTimes = computed(() => solvesToNumValues(displaySolves.value))
-const best = computed(() => bestSolve(solvingTimes.value))
-const worst = computed(() => worstSolve(solvingTimes.value))
-const bestIndex = computed(() => {
-  return findIndex(solvingTimes.value, (x: number) => x == best.value)
-})
-const worstIndex = computed(() => {
-  return findIndex(solvingTimes.value, (x: number) => x == worst.value)
-})
+const bestIndex = computed(() => bestSolve(solvingTimes.value).index)
+const worstIndex = computed(() => worstSolve(solvingTimes.value).index)
 
 const tableData = computed(() => {
   return displaySolves.value.map((solve: Solve, index: number) => {
@@ -92,42 +86,37 @@ function reconstruct(solve: Solve) {
 </script>
 
 <template>
-  <v-dialog v-model="props.isOpen" :theme="currentColors.isDark.value ? 'dark' : 'light'" max-width="800px">
-    <template #default>
-      <v-card :title="dialogTitle">
-        <v-card-text>
-          <v-data-table :items="tableData" :headers="headers" :fixed-header="true" :fixed-footer="false" :hover="true"
-            :items-per-page="-1" :sticky="true" :theme="currentColors.isDark.value ? 'dark' : 'light'" density="compact">
+  <v-card :title="dialogTitle">
+    <v-card-text>
+      <v-data-table :items="tableData" :headers="headers" :fixed-header="true" :fixed-footer="false" :hover="true"
+        :items-per-page="-1" :sticky="true" :theme="currentColors.isDark.value ? 'dark' : 'light'" density="compact">
 
-            <template #item.displayIndex="{ item }">
-              {{ `${item.displayIndex}.` }}
+        <template #item.displayIndex="{ item }">
+          {{ `${item.displayIndex}.` }}
+        </template>
+        <template #item.displayTime="{ item }">
+          {{ item.isOutlier && numSolves > 1 ? `(${item.displayTime})` : item.displayTime }}
+        </template>
+        <template #item.scramble="{ item }">
+          <a @click="copyScrambleToClipboard(item.scramble)"> {{ item.scramble }}</a>
+        </template>
+        <template #item.actions="{ item }">
+          <v-tooltip text="Go to reconstruction" :theme="currentColors.isDark.value ? 'light' : 'dark'" location="top">
+            <template v-slot:activator="{ props }">
+              <v-icon v-bind="props" class="show-on-hover" @click="reconstruct(item)">mdi-cube-unfolded</v-icon>
             </template>
-            <template #item.displayTime="{ item }">
-              {{ item.isOutlier ? `(${item.displayTime})` : item.displayTime }}
-            </template>
-            <template #item.scramble="{ item }">
-              <a @click="copyScrambleToClipboard(item.scramble)"> {{ item.scramble }}</a>
-            </template>
-            <template #item.actions="{ item }">
-              <v-tooltip text="Go to reconstruction" :theme="currentColors.isDark.value ? 'light' : 'dark'"
-                location="top">
-                <template v-slot:activator="{ props }">
-                  <v-icon v-bind="props" class="show-on-hover" @click="reconstruct(item)">mdi-cube-unfolded</v-icon>
-                </template>
-              </v-tooltip>
-            </template>
-            <template #bottom></template>
-          </v-data-table>
-        </v-card-text>
+          </v-tooltip>
+        </template>
+        <template #bottom></template>
+      </v-data-table>
+    </v-card-text>
 
-        <v-card-actions>
-          <v-spacer></v-spacer>
+    <v-card-actions>
+      <v-spacer></v-spacer>
 
-          <v-btn text="Close" @click="$emit('close-dialog')"></v-btn>
-        </v-card-actions>
-      </v-card>
-    </template>
-  </v-dialog>
+      <v-btn text="Close" @click="$emit('close-dialog')"></v-btn>
+    </v-card-actions>
+  </v-card>
   <v-snackbar v-model="showSnackbar" :timeout="1500" :theme="currentColors.isDark.value ? 'light' : 'dark'">
     {{ snackbarText }}
 

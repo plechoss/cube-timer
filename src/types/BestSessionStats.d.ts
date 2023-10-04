@@ -1,10 +1,12 @@
 type BestSessionStats = {
   best: number;
+  bestIndex: number;
   worst: number;
+  worstIndex: number;
   avg5: number;
-  avg5Start: number;
+  avg5Index: number;
   avg12: number;
-  avg12Start: number;
+  avg12Index: number;
   avg100: number;
-  avg100Start: number;
+  avg100Index: number;
 };

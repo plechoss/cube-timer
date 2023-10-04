@@ -23,19 +23,19 @@ export function avg(solves: Solve[], scope: number): number {
 export function bestAvg(
   solves: Solve[],
   scope: number
-): { bestAvgValue: number; startingIndex: number } {
+): { bestAvgValue: number; bestAvgIndex: number } {
   let bestAvgValue = Number.MAX_VALUE;
-  let startingIndex = -1;
+  let bestAvgIndex = -1;
 
   [...Array(Math.max(solves.length - scope + 1, 0)).keys()].forEach((i) => {
     let currentAvg = avg(solves.slice(i, i + scope), scope);
     if (currentAvg < bestAvgValue) {
       bestAvgValue = currentAvg;
-      startingIndex = i;
+      bestAvgIndex = i + scope - 1;
     }
   });
 
-  return { bestAvgValue, startingIndex };
+  return { bestAvgValue, bestAvgIndex };
 }
 
 export function solvesToNumValues(solves: Solve[]): number[] {
@@ -46,15 +46,37 @@ export function solvesToNumValues(solves: Solve[]): number[] {
   });
 }
 
-export function bestSolve(solvingTimes: number[]): number {
-  return Math.min(...solvingTimes);
+export function bestSolve(solvingTimes: number[]): {
+  value: number;
+  index: number;
+} {
+  const value = Math.min(...solvingTimes);
+  const index = solvingTimes.findIndex((x: number) => x == value);
+  return {
+    value,
+    index,
+  };
 }
 
-export function worstSolve(solvingTimes: number[]): number {
+export function worstSolve(solvingTimes: number[]): {
+  value: number;
+  index: number;
+} {
   const resultsWithoutDNFs = solvingTimes.filter((x) => x != Number.MAX_VALUE);
-  return resultsWithoutDNFs.length > 0
-    ? Math.max(...resultsWithoutDNFs)
-    : Number.MAX_VALUE;
+  const value =
+    resultsWithoutDNFs.length > 0
+      ? Math.max(...resultsWithoutDNFs)
+      : Number.MAX_VALUE;
+
+  const index =
+    resultsWithoutDNFs.length > 0
+      ? resultsWithoutDNFs.findIndex((x: number) => x == value)
+      : -1;
+
+  return {
+    value,
+    index,
+  };
 }
 
 export function getBestSessionStats(solves: Solve[]): BestSessionStats {
@@ -67,14 +89,16 @@ export function getBestSessionStats(solves: Solve[]): BestSessionStats {
   const avg100Stats = bestAvg(solves, 100);
 
   return {
-    best: best,
-    worst: worst,
+    best: best.value,
+    bestIndex: best.index,
+    worst: worst.value,
+    worstIndex: worst.index,
     avg5: avg5Stats.bestAvgValue,
-    avg5Start: avg5Stats.startingIndex,
+    avg5Index: avg5Stats.bestAvgIndex,
     avg12: avg12Stats.bestAvgValue,
-    avg12Start: avg12Stats.startingIndex,
+    avg12Index: avg12Stats.bestAvgIndex,
     avg100: avg100Stats.bestAvgValue,
-    avg100Start: avg100Stats.startingIndex,
+    avg100Index: avg100Stats.bestAvgIndex,
   };
 }
 

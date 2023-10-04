@@ -10,6 +10,8 @@ import { timeInSecondsToDisplay } from "../helpers/timer"
 import { ScrambleType } from "../types/enums"
 import { useCurrentColors } from '../composables/currentColors'
 import { useSessionStats } from '../composables/sessionStats';
+import { useSolveDialog } from '../composables/solveDialog';
+import SolveDialog from './SolveDialog.vue';
 
 const props = defineProps<{
   scrambleType: ScrambleType
@@ -18,6 +20,7 @@ const props = defineProps<{
 const solveStore = useSolveStore()
 const scrambleStore = useScrambleStore()
 const sessionStats = useSessionStats()
+const solveDialog = useSolveDialog()
 
 //add keyboard events
 function keyUpHandler(e: KeyboardEvent) {
@@ -150,7 +153,7 @@ function onPenaltyClick(e: Event, penaltyType: 'noPenalty' | 'plusTwo' | 'DNF') 
     <v-col cols="12">
       <v-row class="align-center">
         <v-col cols="3" align-self="start">
-          <stats-display></stats-display>
+          <stats-display @open-solve-dialog="solveDialog.openSolveDialog"></stats-display>
         </v-col>
         <v-col>
           <v-row>
@@ -194,11 +197,18 @@ function onPenaltyClick(e: Event, penaltyType: 'noPenalty' | 'plusTwo' | 'DNF') 
           </v-row>
         </v-col>
         <v-col cols="3" align-self="start">
-          <session-display></session-display>
+          <session-display @open-solve-dialog="solveDialog.openSolveDialog"></session-display>
         </v-col>
       </v-row>
     </v-col>
   </v-row>
+
+  <v-dialog v-model="solveDialog.isSolveDialogOpen.value" :theme="currentColors.isDark.value ? 'dark' : 'light'"
+    max-width="800px">
+    <solve-dialog :ending-index="solveDialog.endingIndex.value" :dialog-display-type="solveDialog.dialogDisplayType.value"
+      @close-dialog="solveDialog.isSolveDialogOpen.value = false">
+    </solve-dialog>
+  </v-dialog>
 </template>
 
 <style scoped>

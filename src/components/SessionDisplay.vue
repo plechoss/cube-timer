@@ -3,11 +3,11 @@ import { computed, nextTick, ref, watch } from 'vue'
 import { useSolveStore } from "../stores/solves"
 import { useCurrentColors } from '../composables/currentColors';
 import { avg, solveToString } from "../helpers/timer"
-import { DialogDisplayType } from '../types/enums';
-import SolveDialog from './SolveDialog.vue';
 
 const currentColors = useCurrentColors()
 const solveStore = useSolveStore()
+
+const emit = defineEmits(['open-solve-dialog'])
 
 function displayAvg(avg: number) {
   if (avg == Number.MAX_VALUE) return '-'
@@ -38,15 +38,6 @@ function onReset() {
 //   if (ans) solveStore.removeSolve(solveStore.solves.length - 1 - index)
 // }
 
-const isSolveDialogOpen = ref(false)
-const dialogDisplayType = ref<DialogDisplayType>('single')
-const endingIndex = ref<number>(-1)
-
-function openSolveDialog(dialogType: DialogDisplayType, index: number) {
-  dialogDisplayType.value = dialogType
-  endingIndex.value = index
-  isSolveDialogOpen.value = true
-}
 
 function scrollToBottom(id: string) {
   nextTick(() => {
@@ -68,12 +59,12 @@ watch(solveStore.solves, () => {
         :theme="currentColors.isDark.value ? 'dark' : 'light'" density="compact">
 
         <template #item.displayTime="{ value, index }">
-          <a @click="openSolveDialog('single', index)">
+          <a @click="emit('open-solve-dialog', 'single', index)">
             {{ value }}
           </a>
         </template>
         <template #item.avg5="{ value, index }">
-          <a v-if="solveStore.solves.length >= 5" @click="openSolveDialog('avg5', index)">
+          <a v-if="solveStore.solves.length >= 5" @click="emit('open-solve-dialog', 'avg5', index)">
             {{ value }}
           </a>
           <span v-else>
@@ -81,7 +72,7 @@ watch(solveStore.solves, () => {
           </span>
         </template>
         <template #item.avg12="{ value, index }">
-          <a v-if="solveStore.solves.length >= 12" @click="openSolveDialog('avg12', index)">
+          <a v-if="solveStore.solves.length >= 12" @click="emit('open-solve-dialog', 'avg12', index)">
             {{ value }}
           </a>
           <span v-else>
@@ -97,9 +88,6 @@ watch(solveStore.solves, () => {
       </v-data-table>
     </v-col>
   </v-row>
-  <solve-dialog :is-open="isSolveDialogOpen" :ending-index="endingIndex" :dialog-display-type="dialogDisplayType"
-    @close-dialog="isSolveDialogOpen = false">
-  </solve-dialog>
 </template>
 
 <style custom>
