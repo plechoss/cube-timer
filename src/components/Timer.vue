@@ -71,14 +71,14 @@ onBeforeMount(async () => {
   window.addEventListener("keydown", keyDownHandler);
 });
 onMounted(async () => {
-  document.getElementById('timer-col').addEventListener("touchstart", touchStartHandler);
-  window.addEventListener("touchend", touchEndHandler);
+  document.getElementById('timer-col').addEventListener("touchend", touchStartHandler);
+  window.addEventListener("touchstart", touchEndHandler);
 })
 onDeactivated(() => {
   window.removeEventListener("keyup", keyUpHandler);
   window.removeEventListener("keydown", keyDownHandler);
-  document.getElementById('timer-col').removeEventListener("touchstart", touchStartHandler);
-  window.removeEventListener("touchend", touchEndHandler);
+  document.getElementById('timer-col').removeEventListener("touchend", touchStartHandler);
+  window.removeEventListener("touchstart", touchEndHandler);
 });
 
 const isSpaceDownAfterSolve = ref(false);
