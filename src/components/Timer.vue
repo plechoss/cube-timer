@@ -2,14 +2,13 @@
 import SessionDisplay from './SessionDisplay.vue';
 import StatsDisplay from './StatsDisplay.vue';
 import type { Ref } from 'vue';
-import { computed, onBeforeMount, onDeactivated, ref, watch } from "vue";
+import { computed, onBeforeMount, onDeactivated, onMounted, ref, watch } from "vue";
 import { settings } from "../static/settings";
 import { useScrambleStore } from "../stores/scramble"
 import { useSolveStore } from "../stores/solves"
 import { timeInSecondsToDisplay } from "../helpers/timer"
 import { ScrambleType } from "../types/enums"
 import { useCurrentColors } from '../composables/currentColors'
-import { useSessionStats } from '../composables/sessionStats';
 import { useSolveDialog } from '../composables/solveDialog';
 import SolveDialog from './SolveDialog.vue';
 
@@ -19,26 +18,28 @@ const props = defineProps<{
 
 const solveStore = useSolveStore()
 const scrambleStore = useScrambleStore()
-const sessionStats = useSessionStats()
 const solveDialog = useSolveDialog()
 
+function handleStart() {
+  if (isInspection.value) {
+    currentPenalty.value = 'noPenalty'
+    runSolve();
+  } else if (isSpaceDownAfterSolve.value) {
+    isSpaceDownAfterSolve.value = false;
+  } else if (!isInspection.value && !isRunning.value) {
+    if (settings.inspection) {
+      currentPenalty.value = 'noPenalty'
+      runInspection();
+    } else {
+      currentPenalty.value = 'noPenalty'
+      runSolve();
+    }
+  }
+}
 //add keyboard events
 function keyUpHandler(e: KeyboardEvent) {
   if (e.code === "Space") {
-    if (isInspection.value) {
-      currentPenalty.value = 'noPenalty'
-      runSolve();
-    } else if (isSpaceDownAfterSolve.value) {
-      isSpaceDownAfterSolve.value = false;
-    } else if (!isInspection.value && !isRunning.value) {
-      if (settings.inspection) {
-        currentPenalty.value = 'noPenalty'
-        runInspection();
-      } else {
-        currentPenalty.value = 'noPenalty'
-        runSolve();
-      }
-    }
+    handleStart();
   }
 }
 function keyDownHandler(e: KeyboardEvent) {
@@ -52,13 +53,32 @@ function keyDownHandler(e: KeyboardEvent) {
   }
 }
 
+function touchStartHandler(e: TouchEvent) {
+  e.preventDefault()
+  if (isRunning.value) {
+    endSolve();
+    isSpaceDownAfterSolve.value = true;
+  }
+
+}
+function touchEndHandler(e: TouchEvent) {
+  e.preventDefault()
+  handleStart()
+}
+
 onBeforeMount(async () => {
   window.addEventListener("keyup", keyUpHandler);
   window.addEventListener("keydown", keyDownHandler);
 });
+onMounted(async () => {
+  document.getElementById('timer-col').addEventListener("touchstart", touchStartHandler);
+  window.addEventListener("touchend", touchEndHandler);
+})
 onDeactivated(() => {
   window.removeEventListener("keyup", keyUpHandler);
   window.removeEventListener("keydown", keyDownHandler);
+  document.getElementById('timer-col').removeEventListener("touchstart", touchStartHandler);
+  window.removeEventListener("touchend", touchEndHandler);
 });
 
 const isSpaceDownAfterSolve = ref(false);
@@ -98,6 +118,7 @@ const currentSolveTimeDisplayClass = computed(() => {
 function runInspection() {
   inspectionStartTime.value = Date.now();
   currentTime.value = Date.now();
+  // refreshTimerPosition()
   isInspection.value = true;
   setInterval(() => {
     if (!isInspection.value) return;
@@ -106,6 +127,7 @@ function runInspection() {
 }
 function runSolve() {
   const timestamp = Date.now()
+  // refreshTimerPosition()
   solveStartTime.value = timestamp;
   currentTime.value = timestamp;
   lastInspectionTime.value = (timestamp - inspectionStartTime.value) / 1000
@@ -146,6 +168,31 @@ function onPenaltyClick(e: Event, penaltyType: 'noPenalty' | 'plusTwo' | 'DNF') 
   else if (penaltyType == 'plusTwo') solveStore.setLastSolvePlusTwo()
   else solveStore.setLastSolveDNF()
 }
+
+// const isOverlay = computed(() => {
+//   return isInspection.value || isRunning.value
+// })
+
+// const timerPosition = ref({ top: 0, left: 0, width: 0, height: 0 })
+// function refreshTimerPosition() {
+//   const element = document.getElementById('timer-text')
+//   const rect = element.getBoundingClientRect();
+//   timerPosition.value = {
+//     top: rect.top,
+//     left: rect.left,
+//     width: rect.right - rect.left,
+//     height: rect.top - rect.left
+//   }
+// }
+
+// onMounted(() => {
+//   refreshTimerPosition()
+// })
+
+// watch(currentSolveTime, () => {
+//   nextTick(() => refreshTimerPosition())
+// })
+
 </script>
 
 <template>
@@ -157,20 +204,9 @@ function onPenaltyClick(e: Event, penaltyType: 'noPenalty' | 'plusTwo' | 'DNF') 
         </v-col>
         <v-col>
           <v-row>
-            <v-col>
-              <span class="text-caption">
-                {{ `avg5: ${sessionStats.currentStats.value.avg5 == Number.MAX_VALUE ? '-' :
-                  sessionStats.currentStats.value.avg5.toFixed(2)} | avg12:
-                                ${sessionStats.currentStats.value.avg12 == Number.MAX_VALUE ? '-' :
-                    sessionStats.currentStats.value.avg12.toFixed(2)}`
-                }}
-              </span>
-            </v-col>
-          </v-row>
-          <v-row>
-            <v-col>
+            <v-col id="timer-col">
 
-              <span :class="'timer-text ' + currentSolveTimeDisplayClass">
+              <span id="timer-text" :class="'timer-text ' + currentSolveTimeDisplayClass">
                 {{ currentSolveTimeDisplay }}
               </span>
             </v-col>
@@ -202,6 +238,11 @@ function onPenaltyClick(e: Event, penaltyType: 'noPenalty' | 'plusTwo' | 'DNF') 
       </v-row>
     </v-col>
   </v-row>
+  <v-row>
+    <v-col>
+      {{ logText }}
+    </v-col>
+  </v-row>
 
   <v-dialog v-model="solveDialog.isSolveDialogOpen.value" :theme="currentColors.isDark.value ? 'dark' : 'light'"
     max-width="800px">
@@ -209,6 +250,15 @@ function onPenaltyClick(e: Event, penaltyType: 'noPenalty' | 'plusTwo' | 'DNF') 
       @close-dialog="solveDialog.isSolveDialogOpen.value = false">
     </solve-dialog>
   </v-dialog>
+  <!-- <v-overlay v-model="isOverlay" scrim="#000000FF">
+
+    <span id="timer-overlay-text" :class="'timer-text ' + currentSolveTimeDisplayClass" :style="{
+      position: 'fixed', top: `${timerPosition.top - 58}px`, left: `${timerPosition.left}px`,
+      width: `${timerPosition.width}px`, height: `${timerPosition.height}px`
+    }">
+      {{ currentSolveTimeDisplay }}
+    </span>
+  </v-overlay> -->
 </template>
 
 <style scoped>
