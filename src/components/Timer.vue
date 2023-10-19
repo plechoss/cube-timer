@@ -198,7 +198,7 @@ function onPenaltyClick(e: Event, penaltyType: 'noPenalty' | 'plusTwo' | 'DNF') 
 <template>
   <v-row class="parent-row">
     <v-col cols="12">
-      <v-row class="align-center">
+      <v-row class="align-start">
         <v-col cols="3" align-self="start">
           <stats-display @open-solve-dialog="solveDialog.openSolveDialog"></stats-display>
         </v-col>
@@ -236,11 +236,6 @@ function onPenaltyClick(e: Event, penaltyType: 'noPenalty' | 'plusTwo' | 'DNF') 
           <session-display @open-solve-dialog="solveDialog.openSolveDialog"></session-display>
         </v-col>
       </v-row>
-    </v-col>
-  </v-row>
-  <v-row>
-    <v-col>
-      {{ logText }}
     </v-col>
   </v-row>
 
