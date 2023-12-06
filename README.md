@@ -7,3 +7,4 @@ Run using
 npm install
 npm run dev
 ```
+Start inspection with space (a touch on mobile), start the solce by holding down space (or your finger on the screen) for one second.
