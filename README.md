@@ -1,5 +1,5 @@
 # pTimer - a speedcubing timer
-A minimalistic speedcubing timer. The goal is to have a simple yet powerful timer that provides a lot of functionality when it comes to analyzing trends in your solves, data import/export and more. For now in development phase. Currenr functionality:
+A minimalistic speedcubing timer. The goal is to have a simple yet powerful timer that provides a lot of functionality when it comes to analyzing trends in your solves, data import/export and more. For now in development phase. Current functionality:
 - random state scrambles
 - avg5, avg12 and avg100 calculation, as well as best cases for all in the session
 - scrambles along with inspection time and solve time saved in local storage
